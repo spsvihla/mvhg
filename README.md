@@ -1,1 +1,1 @@
-# multivariate-hypergeometric
+# mvhg
