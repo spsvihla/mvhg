@@ -46,6 +46,24 @@ if $CLEAN; then
     exit 0
 fi
 
+ENV_FILE=".env"
+LINE='PYTHONPATH=.venv/lib/python3.10/site-packages:$PYTHONPATH'
+
+# Check if .env exists
+if [ ! -f "$ENV_FILE" ]; then
+    echo "Creating $ENV_FILE..."
+    echo "$LINE" > "$ENV_FILE"
+    echo ".env created with PYTHONPATH entry."
+else
+    # Check if the line already exists
+    if ! grep -qxF "$LINE" "$ENV_FILE"; then
+        echo "Appending PYTHONPATH to $ENV_FILE..."
+        echo "$LINE" >> "$ENV_FILE"
+    else
+        echo "$ENV_FILE already contains the PYTHONPATH entry."
+    fi
+fi
+
 # --- Clean previous builds ---
 echo "Cleaning previous build artifacts..."
 rm -rf build/ "$WHEEL_DIR"/ "${PACKAGE_NAME}"*.egg-info UNKNOWN.egg-info
