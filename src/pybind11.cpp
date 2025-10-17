@@ -8,5 +8,24 @@ namespace py = pybind11;
 
 
 PYBIND11_MODULE(_mvhg, m) {
-    // TODO
+    m.def
+    (
+        "hypergeometric", 
+        &hypergeometric,
+        py::arg("N"),
+        py::arg("K"),
+        py::arg("n"),
+        py::arg("num_samples"),
+        py::arg("seed")
+    );
+    m.def
+    (
+        "multivariate_hypergeometric",
+        &multivariate_hypergeometric,
+        py::arg("Ns"),
+        py::arg("N"),
+        py::arg("Na"),
+        py::arg("num_samples"),
+        py::arg("seed")
+    );
 }
