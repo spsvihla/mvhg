@@ -4,9 +4,9 @@
  */
 
 // standard library includes
-#include <iostream>
-#include <random>
-#include <vector>
+#include <cmath>        // for std::exp and std::log
+#include <random>       // for std::mt19937
+#include <vector>       // for std::vector
 
 // Pybind11 includes
 #include <pybind11/numpy.h>
@@ -29,21 +29,26 @@ rand_uniform_double(std::mt19937& rng)
 }
 
 inline double
-get_pk(int N, int K, int n, int k)
+get_log_pk(int N, int K, int n, int k)
 {
-    // compute PMF using factorial ratios via lgamma once
     double log_pk = std::lgamma(K + 1) - std::lgamma(k + 1) - std::lgamma(K - k + 1)
                   + std::lgamma(N - K + 1)
                   - std::lgamma(n - k + 1) - std::lgamma(N - K - n + k + 1)
                   - std::lgamma(N + 1) + std::lgamma(n + 1) + std::lgamma(N - n + 1);
-    return std::exp(log_pk);
+    return log_pk;
+}
+
+inline double
+get_pk(int N, int K, int n, int k)
+{
+    return std::exp(get_log_pk(N, K, n, k));
 }
 
 inline double 
 get_pk_prev(int N, int K, int n, int k, double pk)
 {
     // recurrence formula: p_{k-1} = p_k / r_{k-1}
-    double r = (K - (k-1)) * (n - (k-1)) / static_cast<double>(k * (N - K - n + k));
+    double r = static_cast<double>(K - (k-1)) * (n - (k-1)) / (static_cast<double>(N - K - n + k) * k);
     return pk / r;
 }
 
@@ -51,14 +56,15 @@ inline double
 get_pk_next(int N, int K, int n, int k, double pk)
 {
     // recurrence formula: p_{k+1} = p_k * r_k
-    double r = (K - k) * (n - k) / static_cast<double>((k + 1) * (N - K - n + k + 1));
+    double r = static_cast<double>(K - k) * (n - k) / (static_cast<double>(k + 1) * (N - K - n + k + 1));
     return pk * r;
 }
 
 inline int
 get_mode(int N, int K, int n)
 {
-    return static_cast<int>(std::floor((n + 1) * (K + 1) / static_cast<double>(N + 2)));
+    double m = static_cast<double>(n + 1) * (K + 1) / (N + 2);
+    return static_cast<int>(std::floor(m));
 }
 
 inline int
@@ -75,10 +81,8 @@ get_k_max(int N, int K, int n)
 
 // find right contact point; see Hormann (1996)
 ContactPoint
-find_contact_point(int N, int K, int n, int km, double pm)
+find_contact_point(int N, int K, int n, int k_max, int km, double pm)
 {
-    int k_max = get_k_max(N, K, n);
-
     int k10 = km;                                           // left bound of search
     double pk10 = pm;                                       // probability of left bound
     double pk11 = get_pk_next(N, K, n, k10, pk10);          // probability of right bound
@@ -88,8 +92,9 @@ find_contact_point(int N, int K, int n, int km, double pm)
     {
         double pk12 = get_pk_next(N, K, n, k10 + 1, pk11);
         double rk1 = pk12 / pk11;
-        double xk0 = std::log(rk0) - std::log1p(1.0 / (km - k10));
-        double xk1 = std::log(rk1) - std::log1p(1.0 / (km - (k10 + 1)));
+        double eps = std::numeric_limits<double>::epsilon() * std::abs(k10);
+        double xk0 = rk0 - 1.0 - 1.0 / (km - (k10 + eps));
+        double xk1 = rk1 - 1.0 - 1.0 / (km - (k10 + eps + 1));
         if(xk1 * xk0 <= 0)
         {
             return ContactPoint{k10+1, pk11};
@@ -101,8 +106,9 @@ find_contact_point(int N, int K, int n, int km, double pm)
     }
 
     // k10 = k_max - 1
-    double xk0 = std::log(rk0) - std::log1p(1.0 / (km - k10));
-    double xk1 = -std::log1p(1.0 / (km - (k10 + 1)));
+    double eps = std::numeric_limits<double>::epsilon() * std::abs(k10);
+    double xk0 = rk0 - 1.0 - 1.0 / (km - (k10 + eps));
+    double xk1 = -1.0 - 1.0 / (km - (k10 + eps + 1));
     if(xk1 * xk0 <= 0)
     {
         return ContactPoint{k10+1, pk11};
@@ -116,20 +122,31 @@ int
 sample_tail(int N, int K, int n, int km, std::size_t num_max_iter, 
             std::mt19937& rng)
 {
+    int k_max = get_k_max(N, K, n);
+    // if the tail is just km, find_contact_point will fail, but we should
+    // return km with probability one.
+    if(km == k_max)
+    {
+        return km;
+    }
+
     // find contact points
     double pm = get_pk(N, K, n, km);
-    auto [k0, pk0] = find_contact_point(N, K, n, km, pm);
+    auto [k0, pk0] = find_contact_point(N, K, n, k_max, km, pm);
 
     // define hat function h(x) = a * exp(-b * x)
-    double b = std::log(pk0) - std::log(get_pk_prev(N, K, n, k0, pk0));
-    double a = pk0 * std::exp(-b * k0);
+    double log_pk0 =  std::log(pk0);
+    double b = log_pk0 - std::log(get_pk_prev(N, K, n, k0, pk0));
+    // long double a = pk0 * std::exp(static_cast<long double>(-b * k0));
 
     // define H(x) = -Integral[x, infinity, h(t)dt] and H^{-1}
     auto H = [=](double x) {
-        return a * std::exp(b * x) / b;
+        // return a * std::exp(b * x) / b;
+        return pk0 * std::exp(b * (x - k0)) / b;
     };
     auto Hinv = [=](double y) {
-        return std::log(b * y / a) / b;
+        // return std::log(b * y / a) / b;
+        return (std::log(b * y) - log_pk0 + b * k0) / b;
     };
 
     // define setup variables
@@ -175,20 +192,36 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
     double pm = get_pk(N, K, n, km);                // probability of mode
     int km_ = get_mode(N, N - K, n);                // mode used for sampling from left tail
 
-    double pk = get_pk(N, K, n, km + 1);
-    double volr = pk;                               // right tail volume
-    for(int k = km + 1; k < k_max; ++k)
+    double volr;
+    if(k_max == km)                                 // km is rightmost
     {
-        pk = get_pk_next(N, K, n, k, pk);
-        volr += pk;
+        volr = 0.0;
+    }
+    else
+    {
+        double pk = get_pk(N, K, n, km + 1);
+        volr = pk;                                  // right tail volume
+        for(int k = km + 1; k < k_max; ++k)
+        {
+            pk = get_pk_next(N, K, n, k, pk);
+            volr += pk;
+        }
     }
 
-    pk = get_pk(N, K, n, k_min);
-    double voll = pk;                               // left tail volume
-    for(int k = k_min; k < km - 1; ++k)
+    double voll;
+    if(k_min == km)                                 // km is leftmost
     {
-        pk = get_pk_next(N, K, n, k, pk);
-        voll += pk;
+        voll = 0.0;
+    }
+    else
+    {
+        double pk = get_pk(N, K, n, k_min);
+        voll = pk;                                  // left tail volume
+        for(int k = k_min; k < km - 1; ++k)
+        {
+            pk = get_pk_next(N, K, n, k, pk);
+            voll += pk;
+        }
     }
 
     double volt = voll + volr + pm;                 // total volume
@@ -216,11 +249,11 @@ hypergeometric(int N, int K, int n, std::size_t num_samples,
     int* buf = output.mutable_data();
 
     unsigned int seed_ = seed.value_or(std::random_device{}());
-    std::mt19937 rng(seed_);
 
     #pragma omp parallel for
     for(std::size_t i = 0; i < num_samples; ++i)
     {
+        std::mt19937 rng(seed_ + i);
         buf[i] = draw(N, K, n, num_max_iter, rng);
     }
 
@@ -240,7 +273,6 @@ multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
     int* buf = output.mutable_data();
 
     unsigned int seed_ = seed.value_or(std::random_device{}());
-    std::mt19937 rng(seed_);
 
     // Fill in parallel (each row = one sample)
     #pragma omp parallel for
@@ -252,6 +284,7 @@ multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
 
         for (std::size_t j = 0; j < Ns.size(); ++j)
         {
+            std::mt19937 rng(seed_ + i);
             row[j] = draw(N - Nsum, Na - Xsum, Ns[j], num_max_iter, rng);
             Xsum += row[j];
             Nsum += Ns[j];
