@@ -3,6 +3,7 @@
 
 // Pybind11 includes
 #include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -16,6 +17,7 @@ PYBIND11_MODULE(_mvhg, m) {
         py::arg("K"),
         py::arg("n"),
         py::arg("num_samples"),
+        py::arg("num_max_iter"),
         py::arg("seed")
     );
     m.def
@@ -26,6 +28,7 @@ PYBIND11_MODULE(_mvhg, m) {
         py::arg("N"),
         py::arg("Na"),
         py::arg("num_samples"),
+        py::arg("num_max_iter"),
         py::arg("seed")
     );
 }

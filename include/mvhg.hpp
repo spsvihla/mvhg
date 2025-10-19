@@ -26,13 +26,15 @@ namespace py = pybind11;
  * @param K Number of "success" items in the population.
  * @param n Number of draws (without replacement).
  * @param num_samples Number of independent samples to generate.
+ * @param num_max_iter Maximum number of iterations of the rejection sampler.
  * @param seed Optional random seed for reproducibility.
  * 
  * @return py::array_t<int> A 1D NumPy array of length `num_samples`, 
  *         containing the number of successes observed in each draw.
  */
 py::array_t<int> hypergeometric(int N, int K, int n, std::size_t num_samples, 
-                               std::optional<unsigned int> seed);
+                                std::size_t num_max_iter, 
+                                std::optional<unsigned int> seed);
 
 /**
  * @brief Draws samples from a multivariate hypergeometric distribution.
@@ -46,6 +48,7 @@ py::array_t<int> hypergeometric(int N, int K, int n, std::size_t num_samples,
  * @param N  Total population size, must equal sum(Ns).
  * @param Na Number of draws (without replacement).
  * @param num_samples Number of independent samples to generate.
+ * @param num_max_iter Maximum number of iterations of the rejection sampler.
  * @param seed Optional random seed for reproducibility.
  * 
  * @return py::array_t<int> A 2D NumPy array of shape `(num_samples, len(Ns))`, 
@@ -53,6 +56,7 @@ py::array_t<int> hypergeometric(int N, int K, int n, std::size_t num_samples,
  */
 py::array_t<int> multivariate_hypergeometric(const std::vector<int>& Ns, int N, 
                                              int Na, std::size_t num_samples, 
+                                             std::size_t num_max_iter,
                                              std::optional<unsigned int> seed);
 
 #endif // MVHG_HPP
