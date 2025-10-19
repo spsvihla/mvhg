@@ -265,7 +265,6 @@ multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
                             std::size_t num_samples, std::size_t num_max_iter,
                             std::optional<unsigned int> seed)
 {
-    // shape = (num_samples, Ns.size())
     const ssize_t n_rows = static_cast<ssize_t>(num_samples);
     const ssize_t n_cols = static_cast<ssize_t>(Ns.size());
 
@@ -274,7 +273,6 @@ multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
 
     unsigned int seed_ = seed.value_or(std::random_device{}());
 
-    // Fill in parallel (each row = one sample)
     #pragma omp parallel for
     for (std::size_t i = 0; i < num_samples; ++i)
     {
