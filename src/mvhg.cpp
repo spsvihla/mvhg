@@ -278,13 +278,14 @@ multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
     #pragma omp parallel for
     for (std::size_t i = 0; i < num_samples; ++i)
     {
+        std::mt19937 rng(seed_ + i);
+
         int Nsum = 0;
         int Xsum = 0;
         int* row = buf + i * n_cols;  // pointer to start of row i
 
         for (std::size_t j = 0; j < Ns.size(); ++j)
         {
-            std::mt19937 rng(seed_ + i);
             row[j] = draw(N - Nsum, Na - Xsum, Ns[j], num_max_iter, rng);
             Xsum += row[j];
             Nsum += Ns[j];
