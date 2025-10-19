@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the following metadata."
+title: "Multivariate Hypergeometric Sampler"
+version: "1.0.0-b1"
+authors:
+  - family-names: "Svihla"
+    given-names: "Sean"
+    orcid: "https://orcid.org/0000-0002-3496-1147"
+    affiliation: "University of Colorado Boulder"
+repository-code: "https://github.com/spsvihla/mvhg"
+keywords:
+  - software
+  - random sampler 
+  - hypergeometric
+  - multivariate hypergeometric
+  - python
+license: "MIT"
