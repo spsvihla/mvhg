@@ -55,9 +55,10 @@ get_pk_prev(int N, int K, int n, int k, double pk)
 inline double
 get_pk_next(int N, int K, int n, int k, double pk)
 {
-    // recurrence formula: p_{k+1} = p_k * r_k
-    double r = static_cast<double>(K - k) * (n - k) / (static_cast<double>(k + 1) * (N - K - n + k + 1));
-    return pk * r;
+    double denom = static_cast<double>(k + 1) * (N - K - n + k + 1);
+    double inv_denom = 1.0 / denom;
+    double num = static_cast<double>(K - k) * (n - k);
+    return pk * num * inv_denom;
 }
 
 inline int
