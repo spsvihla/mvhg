@@ -13,8 +13,8 @@ def hypergeometric(
     N: int,
     K: int,
     n: int,
-    num_samples: Optional[int],
-    num_max_iter: Optional[int],
+    num_samples: Optional[int] = None,
+    num_max_iter: Optional[int] = None,
     seed: Optional[int] = None
 ) -> np.ndarray:
     """
@@ -64,8 +64,8 @@ def multivariate_hypergeometric(
     Ns: ArrayLike,
     N: int,
     Na: int,
-    num_samples: Optional[int] = 1,
-    num_max_iter: Optional[int] = 1000,
+    num_samples: Optional[int] = None,
+    num_max_iter: Optional[int] = None,
     seed: Optional[int] = None
 ) -> np.ndarray:
     """
