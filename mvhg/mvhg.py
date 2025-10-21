@@ -13,7 +13,7 @@ def hypergeometric(
     N: int,
     K: int,
     n: int,
-    num_samples: int,
+    num_samples: int = 1,
     num_max_iter: Optional[int] = 1000,
     seed: Optional[int] = None
 ) -> np.ndarray:
@@ -28,7 +28,7 @@ def hypergeometric(
         Number of "success" states in the population.
     n : int
         Number of draws (sample size).
-    num_samples : int
+    num_samples : int, default = 1
         Number of random variates to generate.
     num_max_iter: Optional[int], default=1000
         Maximum number of iterations of the rejection sampler.
@@ -52,14 +52,15 @@ def hypergeometric(
     if num_samples <= 0:
         raise ValueError(f"num_samples must be positive (got {num_samples})")
 
-    return mvhg._mvhg.hypergeometric(N, K, n, num_samples, num_max_iter, seed)
+    samples = mvhg._mvhg.hypergeometric(N, K, n, num_samples, num_max_iter, seed)
+    return np.squeeze(samples)
 
 
 def multivariate_hypergeometric(
     Ns: ArrayLike,
     N: int,
     Na: int,
-    num_samples: int,
+    num_samples: int = 1,
     num_max_iter: Optional[int] = 1000,
     seed: Optional[int] = None
 ) -> np.ndarray:
@@ -74,7 +75,7 @@ def multivariate_hypergeometric(
         Total population size.
     Na : int
         Number of draws (sample size).
-    num_samples : int
+    num_samples : int, default = 1
         Number of random variates to generate.
     num_max_iter: Optional[int], default=1000
         Maximum number of iterations of the rejection sampler.
@@ -101,4 +102,5 @@ def multivariate_hypergeometric(
     if num_samples <= 0:
         raise ValueError(f"num_samples must be positive (got {num_samples})")
 
-    return mvhg._mvhg.multivariate_hypergeometric(Ns, N, Na, num_samples, num_max_iter, seed)
+    samples = mvhg._mvhg.multivariate_hypergeometric(Ns, N, Na, num_samples, num_max_iter, seed)
+    return np.squeeze(samples)
