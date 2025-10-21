@@ -13,8 +13,8 @@ def hypergeometric(
     N: int,
     K: int,
     n: int,
-    num_samples: int = 1,
-    num_max_iter: Optional[int] = 1000,
+    num_samples: Optional[int],
+    num_max_iter: Optional[int],
     seed: Optional[int] = None
 ) -> np.ndarray:
     """
@@ -49,8 +49,12 @@ def hypergeometric(
         raise ValueError(f"K must satisfy 0 ≤ K ≤ N (got K={K}, N={N})")
     if not (0 <= n <= N):
         raise ValueError(f"n must satisfy 0 ≤ n ≤ N (got n={n}, N={N})")
-    if num_samples <= 0:
+    if num_samples is None:
+        num_samples = 1
+    elif num_samples <= 0:
         raise ValueError(f"num_samples must be positive (got {num_samples})")
+    if num_max_iter is None:
+        num_max_iter = 1000
 
     samples = mvhg._mvhg.hypergeometric(N, K, n, num_samples, num_max_iter, seed)
     return np.squeeze(samples)
@@ -60,7 +64,7 @@ def multivariate_hypergeometric(
     Ns: ArrayLike,
     N: int,
     Na: int,
-    num_samples: int = 1,
+    num_samples: Optional[int] = 1,
     num_max_iter: Optional[int] = 1000,
     seed: Optional[int] = None
 ) -> np.ndarray:
@@ -99,8 +103,12 @@ def multivariate_hypergeometric(
         raise ValueError(f"Sum of Ns must equal N (sum={Ns.sum()}, N={N})")
     if not (0 <= Na <= N):
         raise ValueError(f"Na must satisfy 0 ≤ Na ≤ N (got Na={Na}, N={N})")
-    if num_samples <= 0:
+    if num_samples is None:
+        num_samples = 1
+    elif num_samples <= 0:
         raise ValueError(f"num_samples must be positive (got {num_samples})")
+    if num_max_iter is None:
+        num_max_iter = 1000
 
     samples = mvhg._mvhg.multivariate_hypergeometric(Ns, N, Na, num_samples, num_max_iter, seed)
     return np.squeeze(samples)
