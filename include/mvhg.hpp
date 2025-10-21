@@ -54,7 +54,7 @@ py::array_t<int> hypergeometric(int N, int K, int n, std::size_t num_samples,
  * @return py::array_t<int> A 2D NumPy array of shape `(num_samples, len(Ns))`, 
  *         where each row represents one sample of category counts.
  */
-py::array_t<int> multivariate_hypergeometric(const std::vector<int>& Ns, int N, 
+py::array_t<int> multivariate_hypergeometric(py::array_t<int>& Ns, int N, 
                                              int Na, std::size_t num_samples, 
                                              std::size_t num_max_iter,
                                              std::optional<unsigned int> seed);

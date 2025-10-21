@@ -262,12 +262,15 @@ hypergeometric(int N, int K, int n, std::size_t num_samples,
 }
 
 py::array_t<int>
-multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
-                            std::size_t num_samples, std::size_t num_max_iter,
+multivariate_hypergeometric(py::array_t<int>& Ns, int N, int Na, 
+                            std::size_t num_samples, std::size_t num_max_iter, 
                             std::optional<unsigned int> seed)
 {
+    py::buffer_info info = Ns.request();
+    const int* Ns_ = static_cast<int*>(info.ptr);
+
     const ssize_t n_rows = static_cast<ssize_t>(num_samples);
-    const ssize_t n_cols = static_cast<ssize_t>(Ns.size());
+    const ssize_t n_cols = info.size;
 
     py::array_t<int> output({n_rows, n_cols});
     int* buf = output.mutable_data();
@@ -285,9 +288,9 @@ multivariate_hypergeometric(const std::vector<int>& Ns, int N, int Na,
 
         for (std::size_t j = 0; j < Ns.size(); ++j)
         {
-            row[j] = draw(N - Nsum, Na - Xsum, Ns[j], num_max_iter, rng);
+            row[j] = draw(N - Nsum, Na - Xsum, Ns_[j], num_max_iter, rng);
             Xsum += row[j];
-            Nsum += Ns[j];
+            Nsum += Ns_[j];
         }
     }
 
