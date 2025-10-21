@@ -57,7 +57,7 @@ def hypergeometric(
         num_max_iter = 1000
 
     samples = mvhg._mvhg.hypergeometric(N, K, n, num_samples, num_max_iter, seed)
-    return np.squeeze(samples)
+    return samples
 
 
 def multivariate_hypergeometric(
@@ -111,4 +111,4 @@ def multivariate_hypergeometric(
         num_max_iter = 1000
 
     samples = mvhg._mvhg.multivariate_hypergeometric(Ns, N, Na, num_samples, num_max_iter, seed)
-    return np.squeeze(samples)
+    return samples
