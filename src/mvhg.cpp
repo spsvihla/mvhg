@@ -191,7 +191,6 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
 
     int km = get_mode(N, K, n);                     // mode
     double pm = get_pk(N, K, n, km);                // probability of mode
-    int km_ = get_mode(N, N - K, n);                // mode used for sampling from left tail
 
     double volr;
     if(k_max == km)                                 // km is rightmost
@@ -226,6 +225,17 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
     }
 
     double volt = voll + volr + pm;                 // total volume
+
+    // NOTE: To sample the left tail, we sample HG(N, N-K, n). If the mode
+    //       occurs at both km and km-1, then get_mode will always return 
+    //       km. So, km_ will correspond with km-1, not km, so that the 
+    //       argument km_+1 is incorrect. We make the correction here.
+
+    int km_ = get_mode(N, N - K, n);                // mode for sampling left tail
+    if(pm == get_pk_prev(N, K, n, km, pm))
+    {
+        km_--;
+    }
 
     double u = rand_uniform_double(rng) * volt;
     if(u < pm)                                      // draw from mode
@@ -278,7 +288,7 @@ multivariate_hypergeometric(py::array_t<int>& Ns, int N, int Na,
     unsigned int seed_ = seed.value_or(std::random_device{}());
 
     #pragma omp parallel for
-    for (std::size_t i = 0; i < num_samples; ++i)
+    for(std::size_t i = 0; i < num_samples; ++i)
     {
         std::mt19937 rng(seed_ + i);
 
@@ -286,12 +296,14 @@ multivariate_hypergeometric(py::array_t<int>& Ns, int N, int Na,
         int Xsum = 0;
         int* row = buf + i * n_cols;  // pointer to start of row i
 
-        for (std::size_t j = 0; j < Ns.size(); ++j)
+        for(std::size_t j = 0; j < Ns.size() - 1; ++j)
         {
             row[j] = draw(N - Nsum, Na - Xsum, Ns_[j], num_max_iter, rng);
             Xsum += row[j];
             Nsum += Ns_[j];
         }
+
+        row[Ns.size() - 1] = Na - Xsum;
     }
 
     return output;
