@@ -32,7 +32,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebI
         target_compile_options(_mvhg PRIVATE
             -O3                 # Full optimization
             -march=native       # Use all CPU features available on this machine
-            -ffast-math         # Allow unsafe but faster math
             -funroll-loops      # Unroll loops for performance
             -fomit-frame-pointer
         )

@@ -8,6 +8,8 @@
 #include <random>       // for std::mt19937
 #include <vector>       // for std::vector
 
+#include <iostream>
+
 // Pybind11 includes
 #include <pybind11/numpy.h>
 #include <pybind11/pybind11.h>
@@ -190,10 +192,9 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
         return K;
     }
 
-    int k_min = get_k_min(N, K, n);                 // minimum of support
-    int k_max = get_k_max(N, K, n);                 // maximum of support
+    int k_max  = get_k_max(N, K, n);                // maximum of support
 
-    int km = get_mode(N, K, n);                     // mode
+    int km = get_mode(N, K, n);                     // mode (rightmost if there are two nodes)
     double pm = get_pk(N, K, n, km);                // probability of mode
 
     double volr;
@@ -212,39 +213,47 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
         }
     }
 
+    bool double_mode = false;
+    double volc = pm;                               // center volume
+    if(pm == get_pk_prev(N, K, n, km, pm))
+    {
+        double_mode = true;
+        volc += pm;
+    }
+
+    int km_ = get_mode(N, N - K, n);                // mode for sampling left tail
+    int k_max_ = get_k_max(N, N - K, n);            // maximum of HG(N, N - K, n)
+
     double voll;
-    if(k_min == km)                                 // km is leftmost
+    if(k_max_ == km_)                               // km_ is rightmost
     {
         voll = 0.0;
     }
     else
     {
-        double pk = get_pk(N, K, n, k_min);
+        double pk = get_pk(N, N - K, n, km_ + 1);
         voll = pk;                                  // left tail volume
-        for(int k = k_min; k < km - 1; ++k)
+        for(int k = km_ + 1; k < k_max_; ++k)
         {
-            pk = get_pk_next(N, K, n, k, pk);
+            pk = get_pk_next(N, N - K, n, k, pk);
             voll += pk;
         }
     }
 
-    double volt = voll + volr + pm;                 // total volume
-
-    // NOTE: To sample the left tail, we sample HG(N, N-K, n). If the mode
-    //       occurs at both km and km-1, then get_mode will always return 
-    //       km. So, km_ will correspond with km-1, not km, so that the 
-    //       argument km_+1 is incorrect. We make the correction here.
-
-    int km_ = get_mode(N, N - K, n);                // mode for sampling left tail
-    if(pm == get_pk_prev(N, K, n, km, pm))
-    {
-        km_--;
-    }
+    double volt = voll + volr + volc;               // total volume
 
     double u = rand_uniform_double(rng) * volt;
-    if(u < pm)                                      // draw from mode
+    if(u < volc)                                    // draw from mode
     {
-        return km;
+        double v = rand_uniform_double(rng) * volc;
+        if(!double_mode || v < pm)
+        {
+            return km;
+        }
+        else
+        {
+            return km - 1;
+        }
     }
     else if(u < pm + volr)                          // draw from right tail
     {
