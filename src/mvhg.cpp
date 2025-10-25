@@ -261,7 +261,6 @@ hypergeometric(int N, int K, int n, std::size_t num_samples,
 
     unsigned int seed_ = seed.value_or(std::random_device{}());
 
-    #pragma omp parallel for
     for(std::size_t i = 0; i < num_samples; ++i)
     {
         std::mt19937 rng(seed_ + i);
@@ -287,7 +286,6 @@ multivariate_hypergeometric(py::array_t<int>& Ns, int N, int Na,
 
     unsigned int seed_ = seed.value_or(std::random_device{}());
 
-    #pragma omp parallel for
     for(std::size_t i = 0; i < num_samples; ++i)
     {
         std::mt19937 rng(seed_ + i);

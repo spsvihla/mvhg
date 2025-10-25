@@ -23,3 +23,24 @@ target_compile_definitions(_mvhg
                            PRIVATE VERSION_INFO=${PROJECT_VERSION})
 
 install(TARGETS _mvhg LIBRARY DESTINATION mvhg)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    message(STATUS "Enabling performance optimizations for ${CMAKE_BUILD_TYPE} build...")
+
+    # Add compiler-specific optimization flags
+    if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(_mvhg PRIVATE
+            -O3                 # Full optimization
+            -march=native       # Use all CPU features available on this machine
+            -ffast-math         # Allow unsafe but faster math
+            -funroll-loops      # Unroll loops for performance
+            -fomit-frame-pointer
+        )
+    elseif(MSVC)
+        target_compile_options(_mvhg PRIVATE
+            /O2                 # Optimize for speed
+            /fp:fast            # Fast math
+            /openmp             # Enable OpenMP
+        )
+    endif()
+endif()
