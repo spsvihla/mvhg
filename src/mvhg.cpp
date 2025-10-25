@@ -213,14 +213,6 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
         }
     }
 
-    bool double_mode = false;
-    double volc = pm;                               // center volume
-    if(pm == get_pk_prev(N, K, n, km, pm))
-    {
-        double_mode = true;
-        volc += pm;
-    }
-
     int km_ = get_mode(N, N - K, n);                // mode for sampling left tail
     int k_max_ = get_k_max(N, N - K, n);            // maximum of HG(N, N - K, n)
 
@@ -240,13 +232,13 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
         }
     }
 
-    double volt = voll + volr + volc;               // total volume
+    double volc = 1 - (volr + voll);
 
-    double u = rand_uniform_double(rng) * volt;
+    double u = rand_uniform_double(rng);
     if(u < volc)                                    // draw from mode
     {
         double v = rand_uniform_double(rng) * volc;
-        if(!double_mode || v < pm)
+        if(v < pm)
         {
             return km;
         }
@@ -255,7 +247,7 @@ draw(int N, int K, int n, std::size_t num_max_iter, std::mt19937& rng)
             return km - 1;
         }
     }
-    else if(u < pm + volr)                          // draw from right tail
+    else if(u < volc + volr)                        // draw from right tail
     {
         return sample_tail(N, K, n, km + 1, num_max_iter, rng);
     }
