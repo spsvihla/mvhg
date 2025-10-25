@@ -115,7 +115,11 @@ find_contact_point(int N, int K, int n, int k_max, int km, double pm)
         return ContactPoint{k10+1, pk11};
     }
 
-    throw std::runtime_error("mvhg.cpp:find_contact_point(): Failed to find contact point.");
+    std::string error_msg = "mvhg.cpp:find_contact_point(): Failed to find contact point with: ";
+    error_msg += "N = " + std::to_string(N);
+    error_msg += ", K = " + std::to_string(K);
+    error_msg += ", n = " + std::to_string(n) + ".";
+    throw std::runtime_error(error_msg);
 }
 
 // rejection-inversion for log-concave (RILC) algorithm; see Horman (1996)
