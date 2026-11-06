@@ -284,8 +284,8 @@ multivariate_hypergeometric(py::array_t<int>& Ns, int N, int Na,
     py::buffer_info info = Ns.request();
     const int* Ns_ = static_cast<int*>(info.ptr);
 
-    const ssize_t n_rows = static_cast<ssize_t>(num_samples);
-    const ssize_t n_cols = info.size;
+    const py::ssize_t n_rows = static_cast<py::ssize_t>(num_samples);
+    const py::ssize_t n_cols = info.size;
 
     py::array_t<int> output({n_rows, n_cols});
     int* buf = output.mutable_data();
