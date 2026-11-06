@@ -1,17 +1,25 @@
 [build-system]
 requires = [
-    "scikit_build_core",
-    "pybind11",
+    "scikit-build-core>=0.4.0",
+    "pybind11>=2.10.0",
+    "cmake>=3.15",
+    "ninja"
 ]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "mvhg"
-version = "1.0.0-b1"
-requires-python = ">=3.8"
+version = "1.0.1" 
+description = "C++ pybind11 extension for MVHG"
+readme = "README.md"
+requires-python = ">=3.9"
 dependencies = [
-    "numpy"
+    "numpy>=1.20"
 ]
 
 [project.optional-dependencies]
 test = ["pytest>=6.0"]
+
+[tool.scikit-build]
+cmake.build-type = "Release"
+wheel.packages = ["mvhg"]

@@ -5,6 +5,7 @@
 
 // standard library includes
 #include <cmath>        // for std::exp and std::log
+#include <optional>
 #include <random>       // for std::mt19937
 #include <vector>       // for std::vector
 
@@ -167,7 +168,7 @@ sample_tail(int N, int K, int n, int km, std::size_t num_max_iter,
         u = u * ym;
         double x = Hinv(u);
         int k = static_cast<int>(std::floor(x + 0.5));
-        if(k <= k0 and k - x <= km - xm)                    // squeeze region
+        if(k <= k0 && k - x <= km - xm)                    // squeeze region
         {
             return k;
         }

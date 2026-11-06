@@ -7,6 +7,7 @@
 
 // standard library includes
 #include <vector>
+#include <optional>
 
 // Pybind11 includes
 #include <pybind11/numpy.h>
